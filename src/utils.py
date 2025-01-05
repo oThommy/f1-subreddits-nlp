@@ -1,7 +1,9 @@
 import pandas as pd
+from collections.abc import Set as ImmutableSet
 from pandas.io.formats.style import Styler
 from contextlib import contextmanager
 from functools import partial, reduce
+from typing import TypeVar
 from config import config
 import torch
 import random
@@ -35,6 +37,12 @@ def _compose_two_functions(f, g):
 def compose(*functions):
     return reduce(_compose_two_functions, functions)
 
+_T = TypeVar('_T')
+_U = TypeVar('_U')
+
+def infer_types(dct: dict[_T, _U], /) -> dict[_T, _U]:
+    return dct
+
 def set_random_seeds(seed: int = config.RANDOM_SEED) -> None:
     '''Set random seeds for reproducibility across random, numpy.random, and torch.'''
     random.seed(seed)
@@ -46,3 +54,20 @@ def set_random_seeds(seed: int = config.RANDOM_SEED) -> None:
     # torch.backends.cudnn.deterministic = True
     # torch.backends.cudnn.benchmark = False
 
+def assert_columns_exist(
+    required_columns: ImmutableSet[str],
+    df: pd.DataFrame,
+    dataframe_name: str | None = None,
+) -> None:
+    '''
+    :param dataframe_name: e.g. 'submissions' -> 'Submissions DataFrame', default is 'The DataFrame'.
+    :raises ValueError: If any of the required columns are missing from the DataFrame.
+    '''
+    missing_columns = required_columns - set(df.columns)
+    name = f'{dataframe_name.capitalize()} DataFrame' if dataframe_name is not None else 'The DataFrame'
+
+    if missing_columns:
+        raise ValueError(
+            f'{name} must contain columns: {required_columns}, '
+            f'missing: {missing_columns}.'
+        )
