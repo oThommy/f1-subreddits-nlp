@@ -1,4 +1,4 @@
-from pathlib import Path
+from pathlib import Path as Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
@@ -11,3 +11,5 @@ MODELS_DIR = ROOT_DIR / 'models'
 
 REPORTS_DIR = ROOT_DIR / 'reports'
 FIGURES_DIR = REPORTS_DIR / 'figures'
+
+RANDOM_SEED = 42
