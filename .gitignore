@@ -11,6 +11,9 @@
 /reports/figures/**
 !/reports/figures/.gitkeep
 
+# Also match other virtual environments, e.g., .venv-testing, .venv-py313
+/.venv*
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
