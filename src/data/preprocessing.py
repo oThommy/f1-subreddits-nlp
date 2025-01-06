@@ -1,3 +1,4 @@
+from functools import cache
 import pandas as pd
 import numpy as np
 import re
@@ -7,7 +8,6 @@ import spacy
 from symspellpy import SymSpell
 import symspellpy
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 from nltk.metrics.distance import edit_distance
 from config import config
 from src.utils import assert_columns_exist
@@ -164,75 +164,6 @@ Drivers_dict = {
 }
 
 F1_VOCABULARY = F1_DRIVERS
-MAX_DICTIONARY_EDIT_DISTANCE = 4
-sym_spell = SymSpell(max_dictionary_edit_distance=MAX_DICTIONARY_EDIT_DISTANCE, prefix_length=7)
-nlp = spacy.load('en_core_web_sm')
-
-def download_file(path, url):
-    if not path.exists():
-        try:
-            print('INFO: downloading english word dictionary...')
-            urllib.request.urlretrieve(url, path)
-            print('downloading complete!!! :)')
-        except Exception as error:
-            raise Exception(f'Download failed: {error}')
-
-
-# english_words_dictionary_file = config.DATA_DIR / 'english_words_dictionary.txt'
-# download_file(english_words_dictionary_file, 'https://raw.githubusercontent.com/wolfgarbe/SymSpell/refs/heads/master/SymSpell/frequency_bigramdictionary_en_243_342.txt')
-
-english_words_dictionary_file = config.DATA_DIR / 'english_words_dictionary.txt'
-download_file(english_words_dictionary_file, 'https://raw.githubusercontent.com/wolfgarbe/SymSpell/refs/heads/master/SymSpell/frequency_dictionary_en_82_765.txt')
-
-with open(english_words_dictionary_file, 'r', encoding='utf-8') as file:
-    for line in file:
-        word, frequency = line.strip().split()
-        frequency = int(frequency)
-        sym_spell.create_dictionary_entry(word, frequency)
-
-for word in F1_VOCABULARY:
-    sym_spell.create_dictionary_entry(word, sys.maxsize)
-
-def normalize(comment):
-    comment = comment.lower()
-    comment = re.sub(r'http\S+', '', comment)
-    comment = re.sub(r'[^a-z\s\d]', '', comment)
-    return comment
-
-
-def tokenize(text):
-    tokens = []
-    for token in nlp(text):
-        tokens.append(token.text)
-    return tokens
-
-
-def remove_stopword(tokens, stop_words=None):
-    if stop_words is None:
-        stop_words = set(stopwords.words('english'))
-    new_tokens = []
-    for word in tokens:
-        if word not in stop_words:
-            new_tokens.append(word)
-    return new_tokens
-
-
-def lemmatize(tokens):
-
-    lemmatizer = WordNetLemmatizer()
-    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in tokens]
-
-    return lemmatized_tokens
-
-
-def NER(tokens):
-    s = ' '.join(tokens)
-
-    doc = nlp(s)
-
-    entities = [(ent.text, ent.label_) for ent in doc.ents]
-    return entities
-
 
 def correct_spelling(word):
     if word in F1_VOCABULARY:
@@ -248,11 +179,60 @@ def correct_spelling(word):
     # print(word, corrected_word, min_distance)
     return corrected_word
 
+def download_file(path, url):
+    if not path.exists():
+        try:
+            print('INFO: downloading english word dictionary...')
+            urllib.request.urlretrieve(url, path)
+            print('downloading complete!!! :)')
+        except Exception as error:
+            raise Exception(f'Download failed: {error}')
+
+SYM_SPELL_MAX_DICTIONARY_EDIT_DISTANCE = 4
+
+@cache
+def load_sym_spell():
+    sym_spell = SymSpell(max_dictionary_edit_distance=SYM_SPELL_MAX_DICTIONARY_EDIT_DISTANCE, prefix_length=7)
+
+    # english_words_dictionary_file = config.DATA_DIR / 'english_words_dictionary.txt'
+    # download_file(english_words_dictionary_file, 'https://raw.githubusercontent.com/wolfgarbe/SymSpell/refs/heads/master/SymSpell/frequency_bigramdictionary_en_243_342.txt')
+
+    english_words_dictionary_file = config.DATA_DIR / 'english_words_dictionary.txt'
+    download_file(english_words_dictionary_file, 'https://raw.githubusercontent.com/wolfgarbe/SymSpell/refs/heads/master/SymSpell/frequency_dictionary_en_82_765.txt')
+
+    with open(english_words_dictionary_file, 'r', encoding='utf-8') as file:
+        for line in file:
+            word, frequency = line.strip().split()
+            frequency = int(frequency)
+            sym_spell.create_dictionary_entry(word, frequency)
+
+    for word in F1_VOCABULARY:
+        sym_spell.create_dictionary_entry(word, sys.maxsize)
+
+    return sym_spell
 
 def correct_spelling_symspell(word):
+    sym_spell = load_sym_spell()
     suggestions = sym_spell.lookup(word, symspellpy.Verbosity.CLOSEST, max_edit_distance=3)
     return suggestions[0].term if suggestions else word
 
+@cache
+def load_nlp():
+    return spacy.load('en_core_web_sm')
+
+def correct_spelling_in_text_spacy(text):
+    nlp = load_nlp()
+    doc = nlp(text)
+    corrected_tokens = [
+        # correct_spelling_symspell(token.text) if token.ent_type_ == 'PERSON' else token.text
+        correct_spelling_symspell(token.text) if token.is_alpha else token.text
+        for token in doc
+    ]
+
+    return ''.join([
+        corrected_tokens[i] + (token.whitespace_ if token.whitespace_ else '')
+        for i, token in enumerate(doc)
+    ])
 
 def combine_names(tokens):
     combined_tokens = []
@@ -279,18 +259,17 @@ def combine_names(tokens):
 
     return combined_tokens
 
+def normalize(comment):
+    comment = comment.lower()
+    comment = re.sub(r'http\S+', '', comment)
+    comment = re.sub(r'[^a-z\s\d]', '', comment)
+    return comment
 
-
-def correct_spelling_in_text_spacy(text):
-    doc = nlp(text)
-    corrected_tokens = [
-        # correct_spelling_symspell(token.text) if token.ent_type_ == 'PERSON' else token.text
-        correct_spelling_symspell(token.text) if token.is_alpha else token.text
-        for token in doc
-    ]
-    combined_names = combine_names(corrected_tokens)
-
-    return ''.join([
-        combined_names[i] + (token.whitespace_ if token.whitespace_ else '')
-        for i, token in enumerate(doc)
-    ])
+def remove_stopword(tokens, stop_words=None):
+    if stop_words is None:
+        stop_words = set(stopwords.words('english'))
+    new_tokens = []
+    for word in tokens:
+        if word not in stop_words:
+            new_tokens.append(word)
+    return new_tokens
