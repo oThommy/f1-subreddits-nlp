@@ -6,6 +6,7 @@ from functools import partial, reduce
 from typing import TypeVar
 from config import config
 import torch
+import torch.version
 import random
 import numpy as np
 
@@ -71,3 +72,17 @@ def assert_columns_exist(
             f'{name} must contain columns: {required_columns}, '
             f'missing: {missing_columns}.'
         )
+
+def get_device() -> torch.device:
+    print(f'PyTorch version: {torch.__version__}')
+    print(f'CUDA available: {torch.cuda.is_available()}')
+
+    if torch.cuda.is_available():
+        device_id = 0  # Default to the first GPU
+        device_name = torch.cuda.get_device_name(device_id)
+        print(f'CUDA version: {torch.version.cuda}')
+        print(f'Selected GPU: {device_name} (device_id={device_id})')
+        return torch.device('cuda')
+    else:
+        print('No GPU available, using CPU')
+        return torch.device('cpu')
