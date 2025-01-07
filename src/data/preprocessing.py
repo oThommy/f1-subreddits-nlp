@@ -11,6 +11,10 @@ from nltk.corpus import stopwords
 from nltk.metrics.distance import edit_distance
 from config import config
 from src.utils import assert_columns_exist
+import nltk
+nltk.download('wordnet')
+from nltk.stem import WordNetLemmatizer
+
 
 _ALPHANUMERIC_PATTERN = re.compile(r'\w')
 
@@ -220,7 +224,7 @@ def correct_spelling_symspell(word):
 def load_nlp():
     return spacy.load('en_core_web_sm')
 
-def correct_spelling_in_text_spacy(text):
+def correct_spelling_in_text_spacy(text, activator=True):
     nlp = load_nlp()
     doc = nlp(text)
     corrected_tokens = [
@@ -229,15 +233,14 @@ def correct_spelling_in_text_spacy(text):
         for token in doc
     ]
 
-    corrected_tokens = combine_names(corrected_tokens)
-    try:
+    if activator:    
         return ''.join([
             corrected_tokens[i] + (token.whitespace_ if token.whitespace_ else '')
             for i, token in enumerate(doc)
         ])
-    except IndexError:
-        print([token.text for token in doc])
-        print(corrected_tokens)
+
+    else: 
+        return corrected_tokens
 
 def combine_names(tokens):
     combined_tokens = []
@@ -279,3 +282,10 @@ def remove_stopword(tokens, stop_words=None):
         if word not in stop_words:
             new_tokens.append(word)
     return new_tokens
+
+def lemmatize(tokens):
+
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_words = [lemmatizer.lemmatize(token) for token in tokens]
+
+    return lemmatized_words
