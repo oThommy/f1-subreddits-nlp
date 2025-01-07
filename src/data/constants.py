@@ -84,7 +84,7 @@ SUBMISSION_COLUMN_DTYPES = infer_types({
     # 'num_crossposts',
     # 'over_18',
     # 'parent_whitelist_status',
-    # 'permalink',
+    'permalink': str,
     # 'pinned',
     # 'pwls',
     # 'quarantine',
@@ -177,7 +177,7 @@ COMMENT_COLUMN_DTYPES = infer_types({
     'id': str,
     
     # 'is_submitter',
-    # 'link_id',
+    'link_id': str,
     # 'locked',
     # 'name',
     # 'no_follow',
@@ -202,3 +202,4 @@ COMMENT_COLUMN_DTYPES = infer_types({
     # 'unrepliable_reason',
 })
 COMMENT_COLUMNS = frozenset(COMMENT_COLUMN_DTYPES.keys())
+# TODO: thom fix dit je mogolische kut code
