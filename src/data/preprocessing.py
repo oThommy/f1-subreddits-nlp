@@ -160,7 +160,7 @@ Drivers_dict = {
     'hulkenberg': 'nico hulkenberg',
     'piastri': 'oscar piastri',
     'lawson': 'liam lawson',
-    'sargean': 'logan sargeant',
+    'sargeant': 'logan sargeant',
 }
 
 F1_VOCABULARY = F1_DRIVERS
@@ -229,10 +229,15 @@ def correct_spelling_in_text_spacy(text):
         for token in doc
     ]
 
-    return ''.join([
-        corrected_tokens[i] + (token.whitespace_ if token.whitespace_ else '')
-        for i, token in enumerate(doc)
-    ])
+    corrected_tokens = combine_names(corrected_tokens)
+    try:
+        return ''.join([
+            corrected_tokens[i] + (token.whitespace_ if token.whitespace_ else '')
+            for i, token in enumerate(doc)
+        ])
+    except IndexError:
+        print([token.text for token in doc])
+        print(corrected_tokens)
 
 def combine_names(tokens):
     combined_tokens = []
@@ -247,7 +252,8 @@ def combine_names(tokens):
         if i + 1 < len(tokens):
             combined_word = f'{word} {tokens[i + 1]}'
             if combined_word in F1_names:
-                combined_tokens.append(combined_word)
+                combined_tokens.append(word)
+                combined_tokens.append(tokens[i + 1])
                 skip_next = True
                 continue
 
