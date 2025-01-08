@@ -36,11 +36,11 @@ def load_submissions_df(
     :raises ValueError: If any of the specified columns are not in `src.data.constants.SUBMISSION_COLUMNS`.
     '''
     # TODO: should this be a warning?
-    if not columns <= constants.SUBMISSION_COLUMNS:
-        raise ValueError(
-            f'Got unknown submission column(s): {columns - constants.SUBMISSION_COLUMNS}. '
-            'If the column does exist in the data, add it to src.data.constants.SUBMISSION_COLUMN_DTYPES.'
-        )
+    # if not columns <= constants.SUBMISSION_COLUMNS:
+    #     raise ValueError(
+    #         f'Got unknown submission column(s): {columns - constants.SUBMISSION_COLUMNS}. '
+    #         'If the column does exist in the data, add it to src.data.constants.SUBMISSION_COLUMN_DTYPES.'
+    #     )
     
     dtypes = {
         column: dtype
@@ -65,11 +65,11 @@ def load_comments_df(
     :param ndjson_streamer: Data generator that streams parsed JSON objects from an ndjson file.
     :raises ValueError: If any of the specified columns are not in `src.data.constants.COMMENT_COLUMNS`.
     '''
-    if not columns <= constants.COMMENT_COLUMNS:
-        raise ValueError(
-            f'Got unknown comment column(s): {columns - constants.COMMENT_COLUMNS}. '
-            'If the column does exist in the data, add it to src.data.constants.COMMENT_COLUMN_DTYPES.'
-        )
+    # if not columns <= constants.COMMENT_COLUMNS:
+    #     raise ValueError(
+    #         f'Got unknown comment column(s): {columns - constants.COMMENT_COLUMNS}. '
+    #         'If the column does exist in the data, add it to src.data.constants.COMMENT_COLUMN_DTYPES.'
+    #     )
     
     dtypes = {
         column: dtype
