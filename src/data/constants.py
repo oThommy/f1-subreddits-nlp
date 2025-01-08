@@ -128,8 +128,18 @@ SUBMISSION_COLUMN_DTYPES = infer_types({
     # 'view_count',
     # 'whitelist_status',
     # 'wls',
+    'post_hint': str,
 })
 SUBMISSION_COLUMNS = frozenset(SUBMISSION_COLUMN_DTYPES.keys())
+DEFAULT_SUBMISSION_COLUMNS = frozenset({
+    'author',
+    'created_utc',
+    'gilded',
+    'id',
+    'score',
+    'selftext',
+    'title',
+})
 
 COMMENT_COLUMN_DTYPES = infer_types({
     # 'all_awardings',
@@ -202,4 +212,11 @@ COMMENT_COLUMN_DTYPES = infer_types({
     # 'unrepliable_reason',
 })
 COMMENT_COLUMNS = frozenset(COMMENT_COLUMN_DTYPES.keys())
-# TODO: thom fix dit je mogolische kut code
+DEFAULT_COMMENT_COLUMNS = (frozenset({
+    'author',
+    'body',
+    'created_utc',
+    'gilded',
+    'id',
+    'score',
+}))

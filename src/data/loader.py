@@ -28,13 +28,14 @@ NdjsonStreamer: TypeAlias = Callable[[Path], Generator[dict[str, Any]]]
 def load_submissions_df(
     ndjson_file: Path,
     ndjson_streamer: NdjsonStreamer = stream_ndjson,
-    columns: ImmutableSet[str] = constants.SUBMISSION_COLUMNS,
+    columns: ImmutableSet[str] = frozenset({'author', 'created_utc', 'gilded', 'id', 'score', 'selftext', 'title'}),
 ) -> pd.DataFrame:
     '''
     :param columns: The desired columns to load into the dataframe.
     :param ndjson_streamer: Data generator that streams parsed JSON objects from an ndjson file.
     :raises ValueError: If any of the specified columns are not in `src.data.constants.SUBMISSION_COLUMNS`.
     '''
+    # TODO: should this be a warning?
     if not columns <= constants.SUBMISSION_COLUMNS:
         raise ValueError(
             f'Got unknown submission column(s): {columns - constants.SUBMISSION_COLUMNS}. '
@@ -52,12 +53,12 @@ def load_submissions_df(
             {column: row.get(column) for column in columns}
             for row in ndjson_streamer(ndjson_file)
         ),
-    ).astype(dtypes)
+    ).astype(dtypes) # TODO: this should not be enforced here?
 
 def load_comments_df(
     ndjson_file: Path,
     ndjson_streamer: NdjsonStreamer = stream_ndjson,
-    columns: ImmutableSet[str] = constants.COMMENT_COLUMNS,
+    columns: ImmutableSet[str] = constants.DEFAULT_COMMENT_COLUMNS,
 ) -> pd.DataFrame:
     '''
     :param columns: The desired columns to load into the dataframe.
