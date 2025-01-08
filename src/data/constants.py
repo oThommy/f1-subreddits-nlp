@@ -71,7 +71,7 @@ SUBMISSION_COLUMN_DTYPES = infer_types({
     # 'link_flair_css_class',
     # 'link_flair_richtext',
     # 'link_flair_template_id',
-    # 'link_flair_text',
+    # 'link_flair_text',                                #FLAIRS: Document, News, Technical
     # 'link_flair_text_color',
     # 'link_flair_type',
     # 'locked',
